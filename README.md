@@ -71,3 +71,67 @@ The current set of technologies used for ``build-minder`` are:
 
 ![High-level architecture](docs/high-level-arch.png)
 
+``build-minder`` is built around two concepts:
+
+1. ``events`` are internal packets for coordinating between components.
+2. ``actions`` are triggered by events, usually something like running a bash script.
+
+``events`` and ``actions`` are managed through four components:
+
+1. ``listener`` ingests incoming HTTP requests, translates
+    them into events, and then passes them to the ``hub``.
+2. ``hub`` receives events and runs any appropriate actions for those events.
+3. ``config`` describes actions (e.g. a bash script to run, a webhook to call) and
+    the mapping from events to actions.
+4. ``viewer`` exposes both an API and HTML webpages for viewing action and event history/status,
+    as well as the ability to directly trigger actions.
+
+As long as we keep the configuration formats straight forward, this should really
+be a pretty simple project to implement.
+
+
+## Scenarios to Solve Really Well
+
+Now that we have approaches and a high-level architecture, let's work through the
+most common scenarios we are trying to solve for and make sure that we can make
+the tool work well.
+
+
+### Small Team, Private Github Repo, Servers on AWS
+
+In my opinion, this is the most important scenario to solve for,
+as it is an extremely common scenario and setting up a solid continuous
+integration and deployment solution would do the most good here.
+
+The user story should look like:
+
+1. Setup your organization on Github.
+2. Create a private Github repository which contains your ``build-minder`` configuration and build scripts.
+3. Create your various other private or public repositories, also on Github.
+4. Deploy ``build-minder`` onto an AWS t1.micro, and open up the ``listener``'s HTTP port for incoming connections.
+5. Add webhooks to all of your repositories you want ``build-minder`` to integrate with, including your configuration.
+6. Bootstrap ``build-minder`` from your configuration repository, including a stock "reload config" action triggered
+    whenever you make changes to your ``build-minder`` configuration repository. (Meaning, that going forward
+    you will be hands off of your build machine, and only make changes to your configuration which your build
+    machine will automatically source into itself. Meaning, all your configuration is always safe and sound in
+    a Git repository, not waiting to be lost in a server failure.)
+7. Success.
+
+So the major potential areas for pain we need to keep in mind are:
+
+1. Installing ``build-minder`` itself needs to be as simple as possible.
+2. Needs to be easy as possible to bootstrap from your configuration repository.
+    Should be as simple as checking out your configuration repository in the right place
+    with the right directory structure.
+3. Would be great if we could add a mechanism which automatically created the webhooks
+    instead of having to go create the webhooks ourselves (which is an easy place to screw
+    up with a typo, etc).
+
+
+### Large Team with Alpha, Staging and Production Environments
+
+...
+
+### Local Development using Vagrant
+
+...
